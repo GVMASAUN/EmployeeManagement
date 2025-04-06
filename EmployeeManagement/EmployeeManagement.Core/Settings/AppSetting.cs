@@ -8,5 +8,6 @@ namespace EmployeeManagement.Core.Settings
 {
     public class AppSetting
     {
+        public string? ConnectionString { get; set; }
     }
 }

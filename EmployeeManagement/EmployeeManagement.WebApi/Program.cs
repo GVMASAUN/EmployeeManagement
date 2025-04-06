@@ -1,4 +1,8 @@
 
+using EmployeeManagement.Contexts;
+using EmployeeManagement.Core.Settings;
+using Microsoft.EntityFrameworkCore;
+
 namespace EmployeeManagement.WebApi
 {
     public class Program
@@ -10,7 +14,18 @@ namespace EmployeeManagement.WebApi
             // Add services to the container.
 
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+            var appSetting = new AppSetting();
+            builder.Configuration.GetSection("AppSetting").Bind(appSetting);
+            builder.Services.AddSingleton(appSetting);
+
+
+            builder.Services.AddDbContext<DatabaseContext>(options =>
+                options.UseMySql(
+                    "Server=localhost;Port=3306;Database=employee_management;User=root;Password=Codeinsight@123",
+                    new MySqlServerVersion(new Version(8, 0, 34)))
+                    );
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
