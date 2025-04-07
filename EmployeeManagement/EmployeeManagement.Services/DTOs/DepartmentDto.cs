@@ -4,12 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EmployeeManagement.Entities
+namespace EmployeeManagement.Services.DTOs
 {
-    public class Department
+    public class DepartmentDto
     {
         public int DepartmentId { get; set; }
         public required string DepartmentName { get; set; }
-        public ICollection<Employee>? Employees { get; set; }
     }
 }

@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using EmployeeManagement.Entities;
 
-namespace EmployeeManagement.Services.Contracts
+namespace EmployeeManagement.Services.Mappings
 {
-    public interface IEmployeeService
+    public class EmployeeMapper : Employee
     {
+
     }
 }
