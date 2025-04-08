@@ -6,7 +6,6 @@ using EmployeeManagement.DataAccess.Contracts;
 using EmployeeManagement.Services.Features;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
-using static EmployeeManagement.Services.Features.GetAllEmployees;
 
 namespace EmployeeManagement.WebApi
 {
@@ -27,16 +26,18 @@ namespace EmployeeManagement.WebApi
 
             builder.Services.AddDbContext<DatabaseContext>(options =>
                 options.UseMySql(
-                    "Server=localhost;Port=3306;Database=employee_management;User=root;Password=Codeinsight@123",
+                    builder.Configuration.GetSection("AppSettings")["ConnectionString"],
                     new MySqlServerVersion(new Version(8, 0, 34)))
                     );
 
-            //builder.Services.AddSingleton(TypeAdaptorConfig.GlobalSettings);
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = builder.Configuration.GetSection("AppSettings")["Redis"];
+            });
+
             builder.Services.AddScoped<IMapper, Mapper>();
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-            //builder.Services.AddMediatR(config => config.RegisterServicesFromAssemblies(AppDomain.CurrentDomain.GetAssemblies()));
             builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(typeof(GetAllEmployees).Assembly));
-            //builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<GetAllEmployeeQuery>());
 
 
             builder.Services.AddEndpointsApiExplorer();

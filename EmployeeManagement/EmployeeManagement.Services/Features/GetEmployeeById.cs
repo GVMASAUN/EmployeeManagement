@@ -2,6 +2,7 @@
 using EmployeeManagement.Services.DTOs;
 using MapsterMapper;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace EmployeeManagement.Services.Features
 {
@@ -20,19 +21,30 @@ namespace EmployeeManagement.Services.Features
         {
             private readonly IUnitOfWork _unitOfWork;
             private readonly IMapper _mapper;
-            public Handler(IUnitOfWork unitOfWork, IMapper mapper)
+            private readonly ILogger<Handler> _logger;
+            public Handler(IUnitOfWork unitOfWork, IMapper mapper, ILogger<Handler> logger)
             {
                 _unitOfWork = unitOfWork;
                 _mapper = mapper;
+                _logger = logger;
             }
             public async Task<EmployeeDto?> Handle(GetEmployeeByIdQuery request, CancellationToken cancellationToken)
             {
-                var employee = await _unitOfWork.EmployeeRepository.GetEmployeeByIdAsync(request.EmployeeId, cancellationToken);
-                if (employee == null)
+                try
                 {
-                    return null;
+                    var employee = await _unitOfWork.EmployeeRepository.GetEmployeeByIdAsync(request.EmployeeId, cancellationToken);
+                    if (employee == null)
+                    {
+                        _logger.LogWarning("Employee with ID {Id} not found", request.EmployeeId);
+                        return null;
+                    }
+                    return _mapper.Map<EmployeeDto>(employee);
                 }
-                return _mapper.Map<EmployeeDto>(employee);
+                catch (Exception exception)
+                {
+                    _logger.LogError(exception, "Error fetching employee by Id: {Message}", exception.Message);
+                    throw new Exception("Error fetching employee.", exception);
+                }
             }
         }
     }

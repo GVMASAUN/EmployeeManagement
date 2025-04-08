@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using EmployeeManagement.DataAccess.Contracts;
+﻿using EmployeeManagement.DataAccess.Contracts;
 using EmployeeManagement.Services.DTOs;
 using MapsterMapper;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace EmployeeManagement.Services.Features
 {
@@ -25,20 +21,33 @@ namespace EmployeeManagement.Services.Features
         {
             private readonly IUnitOfWork _unitOfWork;
             private readonly IMapper _mapper;
-            public Handler(IUnitOfWork unitOfWork, IMapper mapper)
+            private readonly ILogger<Handler> _logger;
+            public Handler(IUnitOfWork unitOfWork, IMapper mapper, ILogger<Handler> logger)
             {
                 _unitOfWork = unitOfWork;
                 _mapper = mapper;
+                _logger = logger;
             }
             public async Task<EmployeeDto?> Handle(GetEmployeeByNameQuery request, CancellationToken cancellationToken)
             {
-                var employee = await _unitOfWork.EmployeeRepository.GetEmployeeByNameAsync(request.EmployeeName, cancellationToken);
 
-                if (employee == null)
+                try
                 {
-                    return null;
+                    var employee = await _unitOfWork.EmployeeRepository.GetEmployeeByNameAsync(request.EmployeeName, cancellationToken);
+
+                    if (employee == null)
+                    {
+                        _logger.LogWarning("Employee with name {Name} not found", request.EmployeeName);
+                        return null;
+                    }
+                    return _mapper.Map<EmployeeDto>(employee);
                 }
-                return _mapper.Map<EmployeeDto>(employee);
+                catch (Exception exception)
+                {
+
+                    _logger.LogError(exception, "Error fetching employee by name: {Message}", exception.Message);
+                    throw new Exception("Error fetching employee.", exception);
+                }
             }
         }
     }

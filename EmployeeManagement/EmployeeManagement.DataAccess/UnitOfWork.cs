@@ -7,13 +7,11 @@ namespace EmployeeManagement.DataAccess
     public class UnitOfWork : IUnitOfWork, IDisposable
     {
         private readonly DatabaseContext _context;
-
-        public IEmployeeRepository EmployeeRepository { get; private set; }
-
+        private IEmployeeRepository? _employeeRepository;
+        public IEmployeeRepository EmployeeRepository => _employeeRepository ??= new EmployeeRepository(_context);
         public UnitOfWork(DatabaseContext context)
         {
             _context = context;
-            EmployeeRepository = new EmployeeRepository(_context);
         }
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)

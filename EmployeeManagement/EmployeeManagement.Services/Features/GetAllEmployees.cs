@@ -3,6 +3,7 @@ using EmployeeManagement.Entities;
 using EmployeeManagement.Services.DTOs;
 using MapsterMapper;
 using MediatR;
+using Microsoft.Extensions.Logging;
 namespace EmployeeManagement.Services.Features
 {
     public class GetAllEmployees
@@ -16,10 +17,12 @@ namespace EmployeeManagement.Services.Features
         {
             private readonly IUnitOfWork _unitOfWork;
             private readonly IMapper _mapper;
-            public Handler(IUnitOfWork unitOfWork, IMapper mapper)
+            private readonly ILogger<Handler> _logger;
+            public Handler(IUnitOfWork unitOfWork, IMapper mapper, ILogger<Handler> logger)
             {
                 _unitOfWork = unitOfWork;
                 _mapper = mapper;
+                _logger = logger;
             }
 
             public async Task<ICollection<EmployeeDto>> Handle(GetAllEmployeeQuery request, CancellationToken cancellationToken)
@@ -27,15 +30,19 @@ namespace EmployeeManagement.Services.Features
                 try
                 {
                     ICollection<Employee> employees = await _unitOfWork.EmployeeRepository.GetAllEmployeeAsync(cancellationToken);
+                    if (employees == null || employees.Count == 0)
+                    {
+                        _logger.LogWarning("No employees found");
+                        return new List<EmployeeDto>();
+                    }
 
                     ICollection<EmployeeDto> employeesDto = _mapper.Map<ICollection<EmployeeDto>>(employees);
-
                     return employeesDto;
                 }
-                catch (Exception ex)
+                catch (Exception exception)
                 {
-                    Console.WriteLine(ex.Message);
-                    return new List<EmployeeDto>();
+                    _logger.LogError(exception, "Error fetching all employees: {Message}", exception.Message);
+                    throw new Exception("Error fetching all employees.", exception);
                 }
             }
         }

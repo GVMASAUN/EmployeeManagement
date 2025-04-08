@@ -1,11 +1,12 @@
 ﻿using EmployeeManagement.Services.Features;
+using EmployeeManagement.WebApi.Constants;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EmployeeManagement.WebApi.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route(RouteKeys.MainRoute)]
     public class EmployeeController : Controller
     {
         private readonly IMediator _mediator;
@@ -15,13 +16,7 @@ namespace EmployeeManagement.WebApi.Controllers
             _mediator = mediator;
         }
 
-        [HttpGet("hello")]
-        public IActionResult HelloWorld()
-        {
-            return Ok(new { Message = "Hello World!!" });
-        }
-
-        [HttpGet("GetEmployees")]
+        [HttpGet(RouteKeys.GetAllEmployees)]
         public async Task<IActionResult> GetAllEmployees(CancellationToken cancellationToken)
         {
             var employees = await _mediator.Send(new GetAllEmployees.GetAllEmployeeQuery(), cancellationToken);
@@ -38,7 +33,7 @@ namespace EmployeeManagement.WebApi.Controllers
             });
         }
 
-        [HttpGet("GetEmployeeById/{employeeId}")]
+        [HttpGet(RouteKeys.GetEmployeeById)]
         public async Task<IActionResult> GetEmployeeById([FromRoute] int employeeId, CancellationToken cancellationToken)
         {
             var employee = await _mediator.Send(new GetEmployeeById.GetEmployeeByIdQuery(employeeId), cancellationToken);
@@ -50,7 +45,7 @@ namespace EmployeeManagement.WebApi.Controllers
             return Ok(new { Message = "Employee retrieved successfully", Employee = employee });
         }
 
-        [HttpGet("GetEmployeeByName/{employeeName}")]
+        [HttpGet(RouteKeys.GetEmployeeByName)]
         public async Task<IActionResult> GetEmployeeByName([FromRoute] string employeeName, CancellationToken cancellationToken)
         {
             var employee = await _mediator.Send(new GetEmployeeByName.GetEmployeeByNameQuery(employeeName), cancellationToken);
@@ -62,7 +57,7 @@ namespace EmployeeManagement.WebApi.Controllers
             return Ok(new { Message = "Employee retrieved successfully", Employee = employee });
         }
 
-        [HttpGet("GetEmployeesByDepartmentId/{departmentId}")]
+        [HttpGet(RouteKeys.GetEmployeesByDepartmentId)]
         public async Task<IActionResult> GetEmployeesByDepartmentId([FromRoute] int departmentId, CancellationToken cancellationToken)
         {
             var employees = await _mediator.Send(new GetEmployeeByDepartmentId.GetEmployeeByDepartmentIdQuery(departmentId), cancellationToken);
@@ -73,7 +68,7 @@ namespace EmployeeManagement.WebApi.Controllers
             return Ok(new { Message = "Employees retrieved successfully", Employees = employees });
         }
 
-        [HttpGet("GetAverageSalary")]
+        [HttpGet(RouteKeys.GetAverageSalary)]
         public async Task<IActionResult> GetAverageSalary(CancellationToken cancellationToken)
         {
             var averageSalary = await _mediator.Send(new GetAverageSalary.GetAverageSalaryQuery(), cancellationToken);

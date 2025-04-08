@@ -7,6 +7,7 @@ using EmployeeManagement.DataAccess.Contracts;
 using EmployeeManagement.Services.DTOs;
 using MapsterMapper;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace EmployeeManagement.Services.Features
 {
@@ -25,15 +26,30 @@ namespace EmployeeManagement.Services.Features
         {
             private readonly IUnitOfWork _unitOfWork;
             private readonly IMapper _mapper;
-            public Handler(IUnitOfWork unitOfWork, IMapper mapper)
+            private readonly ILogger<Handler> _logger;
+            public Handler(IUnitOfWork unitOfWork, IMapper mapper, ILogger<Handler> logger)
             {
                 _unitOfWork = unitOfWork;
                 _mapper = mapper;
+                _logger = logger;
             }
             public async Task<ICollection<EmployeeDto>> Handle(GetEmployeeByDepartmentIdQuery request, CancellationToken cancellationToken)
             {
-                var employees = await _unitOfWork.EmployeeRepository.GetEmployeesByDepartmentIdAsync(request.DepartmentId, cancellationToken);
-                return _mapper.Map<ICollection<EmployeeDto>>(employees);
+                try
+                {
+                    var employees = await _unitOfWork.EmployeeRepository.GetEmployeesByDepartmentIdAsync(request.DepartmentId, cancellationToken);
+                    if (employees == null || employees.Count == 0)
+                    {
+                        _logger.LogWarning("No employees found for department ID {DepartmentId}", request.DepartmentId);
+                        return new List<EmployeeDto>();
+                    }
+                    return _mapper.Map<ICollection<EmployeeDto>>(employees);
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogError(exception, "Error fetching employees by department ID: {Message}", exception.Message);
+                    throw new Exception("Error fetching employees.", exception);
+                }
             }
         }
     }
