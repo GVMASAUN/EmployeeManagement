@@ -14,6 +14,7 @@ namespace EmployeeManagement.Services.DTOs
         public required string Email { get; set; }
         public long PhoneNumber { get; set; }
         public int Salary { get; set; }
+        public string? Role { get; set; }
         public int DepartmentId { get; set; }
         public DepartmentDto? Department { get; set; }
 

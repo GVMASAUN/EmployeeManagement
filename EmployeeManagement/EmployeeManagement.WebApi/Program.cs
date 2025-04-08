@@ -1,10 +1,16 @@
 
 using EmployeeManagement.Contexts;
+using EmployeeManagement.Core.Contracts;
+using EmployeeManagement.Core.Services;
 using EmployeeManagement.Core.Settings;
 using EmployeeManagement.DataAccess;
 using EmployeeManagement.DataAccess.Contracts;
+using EmployeeManagement.Services.Contracts;
 using EmployeeManagement.Services.Features;
+using EmployeeManagement.Services.Services;
+using EmployeeManagement.WebApi.Authentication;
 using MapsterMapper;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 
 namespace EmployeeManagement.WebApi
@@ -30,11 +36,21 @@ namespace EmployeeManagement.WebApi
                     new MySqlServerVersion(new Version(8, 0, 34)))
                     );
 
+            builder.Services.AddAuthentication("JwtScheme")
+                .AddScheme<AuthenticationSchemeOptions, CustomAuthenticationHandler>("JwtScheme", null);
+
+            builder.Services.AddLogging();
+            builder.Services.AddAuthentication("JwtScheme");
+            builder.Services.AddAuthorization();
+            //builder.Services.AddAuthorization();
+
             builder.Services.AddStackExchangeRedisCache(options =>
             {
                 options.Configuration = builder.Configuration.GetSection("AppSettings")["Redis"];
             });
 
+            builder.Services.AddScoped<ITokenService, TokenService>();
+            builder.Services.AddScoped<IRedisCacheService, RedisCacheService>();
             builder.Services.AddScoped<IMapper, Mapper>();
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(typeof(GetAllEmployees).Assembly));

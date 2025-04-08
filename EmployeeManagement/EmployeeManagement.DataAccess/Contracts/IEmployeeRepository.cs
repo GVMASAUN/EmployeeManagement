@@ -11,7 +11,7 @@ namespace EmployeeManagement.DataAccess.Contracts
     {
         Task<ICollection<Employee>> GetAllEmployeeAsync(CancellationToken cancellationToken);
         Task<Employee?> GetEmployeeByIdAsync(int employeeId, CancellationToken cancellationToken);
-        Task<Employee?> GetEmployeeByNameAsync(string employeeName, CancellationToken cancellationToken);
+        Task<Employee?> GetEmployeeByEmailAsync(string email, CancellationToken cancellationToken);
         Task<double> GetAverageSalaryAsync(CancellationToken cancellationToken);
         Task<ICollection<Employee>> GetEmployeesByDepartmentIdAsync(int departmentId, CancellationToken cancellationToken);
     }

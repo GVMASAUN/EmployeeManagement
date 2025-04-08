@@ -1,6 +1,8 @@
-﻿using EmployeeManagement.Services.Features;
+﻿using EmployeeManagement.Services.DTOs;
+using EmployeeManagement.Services.Features;
 using EmployeeManagement.WebApi.Constants;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EmployeeManagement.WebApi.Controllers
@@ -16,6 +18,23 @@ namespace EmployeeManagement.WebApi.Controllers
             _mediator = mediator;
         }
 
+        [HttpPost(RouteKeys.EmployeeLogin)]
+        public async Task<IActionResult> EmployeeLogin([FromBody] LoginDto loginDto, CancellationToken cancellationToken)
+        {
+            if (loginDto == null)
+            {
+                return BadRequest(new { Message = "Invalid employee data." });
+            }
+            var loginResponse = await _mediator.Send(new EmployeeLogin.EmployeeLoginQuery(loginDto), cancellationToken);
+            if (loginResponse.Token == null)
+            {
+                return Unauthorized(new { Message = "Invalid credentials." });
+            }
+
+            return Ok(new { Message = "Login successful", Token = loginResponse.Token });
+        }
+
+        [Authorize(AuthenticationSchemes = "JwtScheme", Roles = "Admin")]
         [HttpGet(RouteKeys.GetAllEmployees)]
         public async Task<IActionResult> GetAllEmployees(CancellationToken cancellationToken)
         {
@@ -45,17 +64,6 @@ namespace EmployeeManagement.WebApi.Controllers
             return Ok(new { Message = "Employee retrieved successfully", Employee = employee });
         }
 
-        [HttpGet(RouteKeys.GetEmployeeByName)]
-        public async Task<IActionResult> GetEmployeeByName([FromRoute] string employeeName, CancellationToken cancellationToken)
-        {
-            var employee = await _mediator.Send(new GetEmployeeByName.GetEmployeeByNameQuery(employeeName), cancellationToken);
-
-            if (employee == null)
-            {
-                return NotFound(new { Message = $"Employee with Name {employeeName} not found." });
-            }
-            return Ok(new { Message = "Employee retrieved successfully", Employee = employee });
-        }
 
         [HttpGet(RouteKeys.GetEmployeesByDepartmentId)]
         public async Task<IActionResult> GetEmployeesByDepartmentId([FromRoute] int departmentId, CancellationToken cancellationToken)
@@ -68,6 +76,7 @@ namespace EmployeeManagement.WebApi.Controllers
             return Ok(new { Message = "Employees retrieved successfully", Employees = employees });
         }
 
+        [Authorize(AuthenticationSchemes = "JwtScheme", Roles = "Admin")]
         [HttpGet(RouteKeys.GetAverageSalary)]
         public async Task<IActionResult> GetAverageSalary(CancellationToken cancellationToken)
         {

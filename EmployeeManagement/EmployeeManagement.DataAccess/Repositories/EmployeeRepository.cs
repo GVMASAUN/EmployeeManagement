@@ -43,10 +43,10 @@ namespace EmployeeManagement.DataAccess.Repositories
                 .FirstOrDefaultAsync(employee => employee.EmployeeId == employeeId);
         }
 
-        public async Task<Employee?> GetEmployeeByNameAsync(string employeeName, CancellationToken cancellationToken)
+        public async Task<Employee?> GetEmployeeByEmailAsync(string email, CancellationToken cancellationToken)
         {
             return await _context.Employees.Include(employee => employee.Department)
-                .FirstOrDefaultAsync(employee => employee.EmployeeName == employeeName);
+                .FirstOrDefaultAsync(employee => employee.Email == email);
         }
     }
 }

@@ -12,6 +12,7 @@ namespace EmployeeManagement.Entities
         public required string EmployeeName { get; set; }
         public required long PhoneNumber {  get; set; }
         public required string Email { get; set; }
+        public required string Password { get; set; }
         public int Salary { get; set; }
         public string? Role { get; set; }
         public int DepartmentId { get; set; }
