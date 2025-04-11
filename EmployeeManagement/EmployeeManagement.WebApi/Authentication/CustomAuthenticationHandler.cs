@@ -15,13 +15,15 @@ namespace EmployeeManagement.WebApi.Authentication
         private readonly ILogger<CustomAuthenticationHandler> _logger;
         private readonly IOptionsMonitor<AuthenticationSchemeOptions> _options;
         private readonly UrlEncoder _urlEncoder;
+        private IClaimsPrincipalProvider _claimsPrincipalProvider;
 
         public CustomAuthenticationHandler(
             IRedisCacheService redisCacheService,
             ITokenService tokenService,
             ILoggerFactory loggerFactory,
             IOptionsMonitor<AuthenticationSchemeOptions> options,
-            UrlEncoder urlEncoder
+            UrlEncoder urlEncoder,
+            IClaimsPrincipalProvider claimsPrincipalProvider
         ) : base(options, loggerFactory, urlEncoder)
         {
             _redisCacheService = redisCacheService;
@@ -29,13 +31,12 @@ namespace EmployeeManagement.WebApi.Authentication
             _logger = loggerFactory.CreateLogger<CustomAuthenticationHandler>();
             _options = options;
             _urlEncoder = urlEncoder;
+            _claimsPrincipalProvider = claimsPrincipalProvider;
         }
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             var token = Request.Headers.Authorization.FirstOrDefault()?.Split(" ").Last();
-
-            token ??= Request.Query["token"].FirstOrDefault();
 
             if (string.IsNullOrEmpty(token))
             {
@@ -60,6 +61,7 @@ namespace EmployeeManagement.WebApi.Authentication
             }
 
             var principal = CreatePrincipal(employee);
+            _claimsPrincipalProvider.Principal = principal;
 
             Context.User = principal;
             Thread.CurrentPrincipal = principal;

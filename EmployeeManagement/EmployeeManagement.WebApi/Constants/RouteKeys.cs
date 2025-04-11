@@ -4,6 +4,7 @@
     {
         //Base Route
         public const string MainRoute = "api/EmployeeManagement";
+        public const string Background = "api/BackgroundTask";
 
         public const string EmployeeLogin = "Login";
         public const string GetAllEmployees = "GetEmployees";
@@ -11,5 +12,8 @@
         public const string GetEmployeeByName = "GetEmployeeByName/{employeeName}";
         public const string GetEmployeesByDepartmentId = "GetEmployeesByDepartmentId/{departmentId}";
         public const string GetAverageSalary = "GetAverageSalary";
+
+        public const string ProcessTask = "ProcessTask";
+        public const string GetClaims = "GetClaims";
     }
 }

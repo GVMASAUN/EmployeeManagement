@@ -1,5 +1,6 @@
 ﻿using EmployeeManagement.Services.DTOs;
 using EmployeeManagement.Services.Features;
+using EmployeeManagement.WebApi.Authorization.Attributes;
 using EmployeeManagement.WebApi.Constants;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -34,8 +35,9 @@ namespace EmployeeManagement.WebApi.Controllers
             return Ok(new { Message = "Login successful", Token = loginResponse.Token });
         }
 
-        [Authorize(AuthenticationSchemes = "JwtScheme", Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = "JwtScheme")]
         [HttpGet(RouteKeys.GetAllEmployees)]
+        [Admin]
         public async Task<IActionResult> GetAllEmployees(CancellationToken cancellationToken)
         {
             var employees = await _mediator.Send(new GetAllEmployees.GetAllEmployeeQuery(), cancellationToken);
@@ -76,7 +78,7 @@ namespace EmployeeManagement.WebApi.Controllers
             return Ok(new { Message = "Employees retrieved successfully", Employees = employees });
         }
 
-        [Authorize(AuthenticationSchemes = "JwtScheme", Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = "JwtScheme", Policy = "AdminPolicy")]
         [HttpGet(RouteKeys.GetAverageSalary)]
         public async Task<IActionResult> GetAverageSalary(CancellationToken cancellationToken)
         {
