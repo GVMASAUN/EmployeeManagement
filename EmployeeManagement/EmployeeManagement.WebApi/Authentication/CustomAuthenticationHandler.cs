@@ -37,10 +37,12 @@ namespace EmployeeManagement.WebApi.Authentication
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             var token = Request.Headers.Authorization.FirstOrDefault()?.Split(" ").Last();
+            var endpont = Context.GetEndpoint();
+            _logger.LogInformation(endpont?.Metadata?.ToString());
 
             if (string.IsNullOrEmpty(token))
             {
-                _logger.LogWarning("Unauthorized - No Token Provided");
+                //_logger.LogWarning("Unauthorized - No Token Provided");
                 return AuthenticateResult.Fail("Unauthorized - No Token Provided");
             }
 
@@ -48,7 +50,7 @@ namespace EmployeeManagement.WebApi.Authentication
 
             if (employee == null)
             {
-                _logger.LogWarning("Unauthorized - No Token Provided");
+                //_logger.LogWarning("Unauthorized - No Token Provided");
                 return AuthenticateResult.Fail("Unauthorized - No Token Provided");
             }
 

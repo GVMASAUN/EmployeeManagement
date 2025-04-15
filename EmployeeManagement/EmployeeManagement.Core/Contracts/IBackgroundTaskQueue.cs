@@ -1,8 +1,10 @@
-﻿namespace EmployeeManagement.Core.Contracts
+﻿using EmployeeManagement.Core.DTOs;
+
+namespace EmployeeManagement.Core.Contracts
 {
     public interface IBackgroundTaskQueue
     {
-        void QueueBackgroundWorkItem(Func<IServiceProvider, CancellationToken, Task> workItem);
-        Task<Func<IServiceProvider, CancellationToken, Task>> DequeueAsync(CancellationToken cancellationToken);
+        void QueueBackgroundWorkItem(BackgroundTaskWrapper backgroundTask);
+        Task<BackgroundTaskWrapper> DequeueAsync(CancellationToken cancellationToken);
     }
 }

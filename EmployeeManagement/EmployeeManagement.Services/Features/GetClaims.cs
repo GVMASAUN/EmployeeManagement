@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
-using EmployeeManagement.Services.Contracts;
-using EmployeeManagement.Services.DTOs;
-using MapsterMapper;
+﻿using System.Security.Claims;
+using EmployeeManagement.Core.Contracts;
 using MediatR;
-using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace EmployeeManagement.Services.Features
@@ -18,33 +11,34 @@ namespace EmployeeManagement.Services.Features
         public class GetClaimsQuery : IRequest<Unit>
         {
             public ICollection<Claim> Claims;
-            public GetClaimsQuery(ICollection<Claim> claims)
+            public IServiceScope ServiceScope { get; set; }
+            public GetClaimsQuery(ICollection<Claim> claims, IServiceScope serviceScope)
             {
                 Claims = claims;
+                ServiceScope = serviceScope;
             }
         }
 
         public class Handler : IRequestHandler<GetClaimsQuery, Unit>
         {
             private readonly ILogger<Handler> _logger;
-            private readonly IMapper _mapper;
-            private readonly IHttpContextAccessor _context;
-            private readonly IClaimsPrincipalProvider _claimsPrincipalProvider;
+            //private readonly IClaimsPrincipalProvider _claimsPrincipalProvider;
+            //private readonly IServiceProvider _serviceProvider;
 
-            public Handler(ILogger<Handler> logger, IMapper mapper, IHttpContextAccessor context, IClaimsPrincipalProvider claimsPrincipalProvider)
+            public Handler(ILogger<Handler> logger, IClaimsPrincipalProvider claimsPrincipalProvider, IServiceProvider serviceProvider)
             {
                 _logger = logger;
-                _mapper = mapper;
-                _context = context;
-                _claimsPrincipalProvider = claimsPrincipalProvider;
+                //_claimsPrincipalProvider = claimsPrincipalProvider;
+                //_serviceProvider = serviceProvider;
             }
             public Task<Unit> Handle(GetClaimsQuery request, CancellationToken cancellationToken)
             {
                 _logger.LogInformation("GetClaimsHandler called");
+                //using var scope = _serviceProvider.CreateScope();
+                var claimsProvider = request.ServiceScope.ServiceProvider.GetRequiredService<IClaimsPrincipalProvider>();
+                var claimPrincipal = claimsProvider.Principal;
 
-                var user = _claimsPrincipalProvider.Principal;
-
-                var claims = user.Claims;
+                var claims = claimPrincipal?.Claims;
                 if (claims != null)
                 {
                     foreach (var claim in claims)

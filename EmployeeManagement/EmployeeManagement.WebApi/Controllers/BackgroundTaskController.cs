@@ -1,9 +1,6 @@
-﻿using System.Security.Claims;
-using System.Text.Json;
+﻿using System.Text.Json;
 using EmployeeManagement.Core.Contracts;
-using EmployeeManagement.Services.Contracts;
 using EmployeeManagement.Services.Features;
-using EmployeeManagement.Services.Services;
 using EmployeeManagement.WebApi.Constants;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -15,17 +12,15 @@ namespace EmployeeManagement.WebApi.Controllers
     [Route(RouteKeys.Background)]
     public class BackgroundTaskController : Controller
     {
-        private readonly IBackgroundTaskQueue _taskQueue;
         private readonly ILogger _logger;
         private readonly IMediator _mediator;
-        private readonly IClaimsPrincipalProvider _claimsPrincipalProvider;
+        private readonly IBackgroundClaimProcessor _backgroundClaimProcessor;
 
-        public BackgroundTaskController(IBackgroundTaskQueue taskQueue, ILogger<BackgroundTaskController> logger, IMediator mediator, IClaimsPrincipalProvider claimsPrincipalProvider)
+        public BackgroundTaskController(ILogger<BackgroundTaskController> logger, IMediator mediator, IBackgroundClaimProcessor backgroundClaimProcessor)
         {
-            _taskQueue = taskQueue;
             _logger = logger;
             _mediator = mediator;
-            _claimsPrincipalProvider = claimsPrincipalProvider;
+            _backgroundClaimProcessor = backgroundClaimProcessor;
         }
 
         [Authorize(AuthenticationSchemes = "JwtScheme")]
@@ -37,7 +32,7 @@ namespace EmployeeManagement.WebApi.Controllers
                 using var reader = new StreamReader(Request.Body);
                 string taskName = await reader.ReadToEndAsync();
 
-                _taskQueue.QueueBackgroundWorkItem(
+                _backgroundClaimProcessor.AddClaimAndEnqueue(
                     async (serviceProvider, cancellationToken) =>
                     {
                         _logger.LogInformation("Background task started: {TaskName}", taskName);
@@ -62,19 +57,15 @@ namespace EmployeeManagement.WebApi.Controllers
         public IActionResult GetClaims(CancellationToken cancellationToken)
         {
             var claimsList = HttpContext.User.Claims.ToList();
-            var claimsPrincipal = HttpContext.User;
 
-            _taskQueue.QueueBackgroundWorkItem(
-                async (serviceProvider, cancellationToken) =>
+            _backgroundClaimProcessor.AddClaimAndEnqueue(
+                async (scope, cancellationToken) =>
                 {
-                    using var scope = serviceProvider.CreateScope();
+                    //using var scope = serviceProvider.CreateScope();
 
-                    var claimsProvider = scope.ServiceProvider.GetRequiredService<IClaimsPrincipalProvider>();
-                    claimsProvider.Principal = _claimsPrincipalProvider.Principal;
-                    //claimsProvider.Principal = claimsPrincipal;
                     var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-                    await mediator.Send(new GetClaims.GetClaimsQuery(claimsList), cancellationToken);
+                    await mediator.Send(new GetClaims.GetClaimsQuery(claimsList, scope), cancellationToken);
                 }
             );
             return Ok(new { Message = "Your request will be processed in background." });

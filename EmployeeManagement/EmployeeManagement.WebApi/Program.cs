@@ -1,6 +1,7 @@
 
 using EmployeeManagement.Contexts;
 using EmployeeManagement.Core.Contracts;
+using EmployeeManagement.Core.Hubs;
 using EmployeeManagement.Core.Services;
 using EmployeeManagement.Core.Settings;
 using EmployeeManagement.DataAccess;
@@ -43,7 +44,7 @@ namespace EmployeeManagement.WebApi
                 .AddScheme<AuthenticationSchemeOptions, CustomAuthenticationHandler>("JwtScheme", null);
 
             builder.Services.AddLogging();
-            builder.Services.AddAuthentication("JwtScheme");
+            //builder.Services.AddAuthentication("JwtScheme");
             builder.Services.AddAuthorization(options =>
             {
                 options.AddPolicy("AdminPolicy", policy =>
@@ -52,9 +53,6 @@ namespace EmployeeManagement.WebApi
                     policy.Requirements.Add(new RoleRequirement("User")));
             });
 
-            builder.Services.AddSingleton<IAuthorizationHandler, RoleRequirementHandler>();
-            //builder.Services.AddAuthorization();
-
             builder.Services.AddStackExchangeRedisCache(options =>
             {
                 options.Configuration = builder.Configuration.GetSection("AppSettings")["Redis"];
@@ -62,12 +60,19 @@ namespace EmployeeManagement.WebApi
 
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddHostedService<QueuedProcessorBackgroundService>();
+
+            builder.Services.AddSingleton<IAuthorizationHandler, RoleRequirementHandler>();
             builder.Services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
+
+            builder.Services.AddScoped<IBackgroundClaimProcessor, BackgroundClaimProcessor>();
             builder.Services.AddScoped<ITokenService, TokenService>();
             builder.Services.AddScoped<IRedisCacheService, RedisCacheService>();
             builder.Services.AddScoped<IMapper, Mapper>();
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IClaimsPrincipalProvider, ClaimsPrincipalProvider>();
+
+            builder.Services.AddSignalR();
             builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(typeof(GetAllEmployees).Assembly));
 
 
@@ -83,12 +88,13 @@ namespace EmployeeManagement.WebApi
                 app.UseSwaggerUI();
             }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             app.UseAuthorization();
 
 
             app.MapControllers();
+            app.MapHub<RealTimeHub>("/realTimeHub");
 
             app.Run();
         }

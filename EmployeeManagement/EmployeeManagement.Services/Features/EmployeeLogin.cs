@@ -49,7 +49,6 @@ namespace EmployeeManagement.Services.Features
                         _logger.LogWarning("Employee with email {Email} not found", request.LoginDto.Email);
                         return request.LoginDto;
                     }
-                    _logger.LogInformation($"Db:{employee.Password}\napi{BCrypt.Net.BCrypt.HashPassword(request.LoginDto.Password)}");
 
                     if (BCrypt.Net.BCrypt.Verify(request.LoginDto.Password, employee.Password))
                     {

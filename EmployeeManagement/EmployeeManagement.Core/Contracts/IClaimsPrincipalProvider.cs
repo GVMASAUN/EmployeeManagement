@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 
-namespace EmployeeManagement.Services.Contracts
+namespace EmployeeManagement.Core.Contracts
 {
     public interface IClaimsPrincipalProvider
     {

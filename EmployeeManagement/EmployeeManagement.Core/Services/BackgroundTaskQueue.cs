@@ -1,31 +1,32 @@
 ﻿using System.Collections.Concurrent;
+using System.Security.Claims;
 using System.Threading.Channels;
 using EmployeeManagement.Core.Contracts;
+using EmployeeManagement.Core.DTOs;
 
 namespace EmployeeManagement.Core.Services
 {
     public class BackgroundTaskQueue : IBackgroundTaskQueue
     {
-        private readonly Channel<Func<IServiceProvider, CancellationToken, Task>> _queue;
-        //private readonly 
+        private readonly Channel<BackgroundTaskWrapper> _queue;
 
         public BackgroundTaskQueue()
         {
-            _queue = Channel.CreateUnbounded<Func<IServiceProvider, CancellationToken, Task>>(new UnboundedChannelOptions
+            _queue = Channel.CreateUnbounded<BackgroundTaskWrapper>(new UnboundedChannelOptions
             {
-                SingleReader = true,
+                SingleReader = false,
                 SingleWriter = false
             });
         }
 
-        public void QueueBackgroundWorkItem(Func<IServiceProvider, CancellationToken, Task> workItem)
+        public void QueueBackgroundWorkItem(BackgroundTaskWrapper taskWrapper)
         {
-            if (workItem == null) throw new ArgumentNullException(nameof(workItem));
+            if (taskWrapper.WorkItem == null) throw new ArgumentNullException(nameof(taskWrapper.WorkItem));
 
-            _queue.Writer.TryWrite(workItem);
+            _queue.Writer.TryWrite(taskWrapper);
         }
 
-        public async Task<Func<IServiceProvider, CancellationToken, Task>> DequeueAsync(CancellationToken cancellationToken)
+        public async Task<BackgroundTaskWrapper> DequeueAsync(CancellationToken cancellationToken)
         {
             var workItem = await _queue.Reader.ReadAsync(cancellationToken);
             return workItem;

@@ -1,4 +1,5 @@
 ﻿using EmployeeManagement.Core.Contracts;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -23,16 +24,19 @@ namespace EmployeeManagement.Core.Services
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                var workItem = await _taskQueue.DequeueAsync(cancellationToken);
+                var taskWrapper = await _taskQueue.DequeueAsync(cancellationToken);
 
-                try
+                _ = Task.Run(async () =>
                 {
-                    await workItem(_serviceProvider, cancellationToken);
-                }
-                catch (Exception exception)
-                {
-                    _logger.LogError(exception, "Error occurred executing {WorkItem}.", nameof(workItem));
-                }
+                    using var scope = _serviceProvider.CreateScope();
+                    var claimsProvider = scope.ServiceProvider.GetRequiredService<IClaimsPrincipalProvider>();
+                    claimsProvider.Principal = taskWrapper.ClaimsPrincipal;
+
+                    //var mediator = scope.ServiceProvider.GetRequiredService<>();
+
+
+                    await taskWrapper.WorkItem(scope, cancellationToken);
+                }, cancellationToken);
             }
             _logger.LogInformation("Queued Processor Background Service is stopping.");
         }
